@@ -58,7 +58,7 @@ markup = ReplyKeyboardMarkup(themes() + [['⬅', '➡']], one_time_keyboard=True
 
 logger = logging.getLogger(__name__)
 
-TOKEN = '5349950152:AAHekslIdmrIM2yjMqQxBJK6IDPcs9h5P0o'
+TOKEN = ''
 
 
 def start(update, context):
