@@ -4,7 +4,7 @@ from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMar
 import sqlite3
 from time import sleep
 
-con = sqlite3.connect('database', check_same_thread=False)
+con = sqlite3.connect('database.db', check_same_thread=False)
 cursor = con.cursor()
 
 subchat = False
@@ -54,11 +54,11 @@ def subtopics(topic):
         return answer
 
 
-markup = ReplyKeyboardMarkup(themes() + [['⬅️', '➡️']], one_time_keyboard=True, resize_keyboard=True)
+markup = ReplyKeyboardMarkup(themes() + [['⬅', '➡']], one_time_keyboard=True, resize_keyboard=True)
 
 logger = logging.getLogger(__name__)
 
-TOKEN = '5349950152:AAHdYch7YjjhXyro-CbbQwtHuIPCF5MM2-U'
+TOKEN = '5349950152:AAHekslIdmrIM2yjMqQxBJK6IDPcs9h5P0o'
 
 
 def start(update, context):
@@ -91,7 +91,8 @@ def find_chat2(update, contex):
     answer1 = update.message.text
     update.message.reply_text('Отлично', reply_markup=ReplyKeyboardRemove())
     update.message.reply_text('Выбери интересный тебе чат',
-                              reply_markup=ReplyKeyboardMarkup(subtopics(topic=answer1) + [['⬅️', '➡️']]))
+                              reply_markup=ReplyKeyboardMarkup(subtopics(topic=answer1) + [['⬅️', '➡️']],
+                                                               one_time_keyboard=True, resize_keyboard=True))
     return 2
 
 
@@ -105,11 +106,13 @@ def end(update, contex):
         chat = ''
         return ConversationHandler.END
     else:
-        cursor.execute(
-            f"""UPDATE subtopics SET users = ((SELECT users FROM subtopics WHERE subtopic = '{chat}') +
-             '{update.message.from_user.id},') WHERE subtopic = '{chat}'""")
+        users = cursor.execute(f"""SELECT users FROM subtopics WHERE subtopic = '{chat}'""").fetchall()[0][0]
+        if str(update.message.from_user.id) not in users:
+            new = f'{users}{update.message.from_user.id}, '
+            cursor.execute(
+                f"""UPDATE subtopics SET users = '{new}' WHERE subtopic = '{chat}'""")
 
-        con.commit()
+            con.commit()
     update.message.reply_text('Чтобы выйти из чата напиши: /stop', reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
@@ -121,9 +124,13 @@ def stop(update, contex):
     return ConversationHandler.END
 
 
-def message(update, contex):
+def message(update, context):
+    users = cursor.execute(f"""SELECT users FROM subtopics WHERE subtopic = '{chat}'""").fetchall()[0][0].split(', ')[
+            :-1]
+    print(users)
     if subchat:
-        update.message.reply_text('Вы написали сообщение')
+        for i in users:
+            context.bot.send_message(i, text=f'{update.message.text}')
     else:
         update.message.reply_text('Извините, я вас не понимаю')
 
