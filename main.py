@@ -4,7 +4,7 @@ from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 import sqlite3
 from time import sleep
 
-TOKEN = '5309964868:AAGKe6Oq2h2tAW99ftRxUcHDJ7iQzJSYvB0'  # токен для бота
+TOKEN = ''  # токен для бота
 
 con = sqlite3.connect('database.db', check_same_thread=False)
 cursor = con.cursor()
